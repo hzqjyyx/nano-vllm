@@ -1,0 +1,26 @@
+FROM vllm/vllm-openai:v0.11.0
+
+RUN apt-get update && apt-get install -y openssh-server
+
+# Configure SSH
+RUN mkdir -p /var/run/sshd && \
+    echo 'root:sunlune' | chpasswd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    mkdir -p /root/.ssh && chmod 700 /root/.ssh
+
+# Expose SSH port
+EXPOSE 22
+
+# install claude code
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash && \
+    . "$HOME/.nvm/nvm.sh" && \
+    nvm install 22 && \
+    node -v && nvm current && npm -v && \
+    npm install -g @anthropic-ai/claude-code ccusage
+
+ENTRYPOINT []
+WORKDIR /workspace
+
+CMD ["/usr/sbin/sshd", "-D"]
